@@ -9,6 +9,8 @@ require('dotenv').config();
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
+const myDB              = require('./connection')
+const Project             = require('./model/Project')
 
 let app = express();
 
@@ -21,6 +23,22 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+
+
+
+myDB(async client => {
+  const myDatabase = await client.db('apitest').collection('project')
+  
+  const projectDatabase = new Project(myDatabase)
+  
+  //Routing for API 
+  apiRoutes(app, projectDatabase);  
+  
+}).then(e =>{
+  
+})
+
 //Sample front-end
 app.route('/:project/')
   .get(function (req, res) {
@@ -29,22 +47,16 @@ app.route('/:project/')
 
 //Index page (static HTML)
 app.route('/')
-  .get(function (req, res) {
-    res.sendFile(process.cwd() + '/views/index.html');
-  });
+.get(function (req, res) {
+  res.sendFile(process.cwd() + '/views/index.html');
+});
+
 
 //For FCC testing purposes
 fccTestingRoutes(app);
 
-//Routing for API 
-apiRoutes(app);  
-    
-//404 Not Found Middleware
-app.use(function(req, res, next) {
-  res.status(404)
-    .type('text')
-    .send('Not Found');
-});
+ 
+
 
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 3000, function () {

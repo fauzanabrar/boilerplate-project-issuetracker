@@ -1,12 +1,11 @@
 const chaiHttp = require('chai-http');
 const chai = require('chai');
 const assert = chai.assert;
-const server2 = require('../server');
-const server = "https://issue-tracker.freecodecamp.rocks";
+const server = require('../server');
+// const server = "https://issue-tracker.freecodecamp.rocks";
 
 chai.use(chaiHttp);
 let _id = ""
-let _id2 = ""
 suite('Functional Tests', function() {
     this.timeout(5000)
     test('Test POST /api/issues/apitest to make an issue with every field',(done)=>{
@@ -87,7 +86,7 @@ suite('Functional Tests', function() {
           .end((err,res)=>{
             assert.equal(res.status, 200)
             assert.equal(res.type, 'application/json')
-            assert.isArray(res.body)
+            assert.isArray(res.body, 'the result must be array')
             done()
           })
     })
@@ -161,6 +160,7 @@ suite('Functional Tests', function() {
             chai.request(server).get(`/api/issues/apitest?_id=${_id}`).end((err, res)=>{
               assert.equal(res.status, 200)
               assert.equal(res.type, 'application/json')
+              console.log(res.body)
               assert.equal(res.body[0].issue_title, issue.issue_title)
               assert.equal(res.body[0].issue_text, issue.issue_text)
               assert.equal(res.body[0].status_text, issue.status_text)
@@ -208,7 +208,8 @@ suite('Functional Tests', function() {
     })
     test('Test PUT /api/issues/apitest update an issue with invalid _id',(done)=>{
         let issue = {
-            _id : "this is invalid id"
+            _id : "this is invalid id",
+            issue_title: 'test invalid id',
         }
         let expectRes = { error: 'could not update', '_id': issue['_id'] }
         chai
@@ -244,18 +245,19 @@ suite('Functional Tests', function() {
     })
     test('Test DELETE /api/issues/apitest an issue with invalid _id',(done)=>{
           let issue = {
-            _id: "638773f419e4cd0bd8de7c726"
+            _id: "this is invalid id"
           }  
-          // let expectRes = { error: 'could not delete', '_id': issue['_id'] }
-          let expectRes = { error: 'missing _id' }
+          let expectRes = { error: 'could not delete', '_id': issue['_id'] }
+          // let expectRes = { error: 'missing _id' }
           chai
           .request(server)
           .delete('/api/issues/apitest')
+          .send(issue)
           .end((err,res)=>{
             assert.equal(res.status, 200)
             assert.equal(res.type, 'application/json')
             assert.equal(res.body.error, expectRes.error)
-            // assert.equal(res.body['_id'], expectRes["_id"])
+            assert.equal(res.body['_id'], expectRes["_id"])
             done()
           })
     })
